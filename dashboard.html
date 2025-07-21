@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Tracking Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Tracking Dashboard</h1>
+            <nav>
+                <a href="index.html" class="btn-secondary">Generate New Link</a>
+                <button onclick="refreshData()" class="btn-primary">Refresh</button>
+            </nav>
+        </header>
+
+        <main>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Links</h3>
+                    <div class="stat-number" id="totalLinks">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Clicks</h3>
+                    <div class="stat-number" id="totalClicks">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Locations Captured</h3>
+                    <div class="stat-number" id="locationsCount">0</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Recent Location Data</h2>
+                <div id="locationsList">
+                    <p class="no-data">No location data available.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🗺️ Map View</h2>
+                <div id="map" style="height: 400px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <p>Map integration would go here (Google Maps, OpenStreetMap, etc.)</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Load dashboard data
+        function loadDashboard() {
+            fetch('/api/dashboard')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('totalLinks').textContent = data.totalLinks;
+                    document.getElementById('totalClicks').textContent = data.totalClicks;
+                    document.getElementById('locationsCount').textContent = data.locationsCount;
+                    
+                    displayLocationsList(data.locations);
+                })
+                .catch(error => {
+                    console.error('Error loading dashboard:', error);
+                });
+        }
+
+        function displayLocationsList(locations) {
+            const container = document.getElementById('locationsList');
+            
+            if (locations.length === 0) {
+                container.innerHTML = '<p class="no-data">No location data available.</p>';
+                return;
+            }
+
+            container.innerHTML = locations.map(location => `
+                <div class="location-item">
+                    <div class="location-header">
+                        <strong>${location.linkName || 'Unnamed Link'}</strong>
+                        <span class="timestamp">${new Date(location.timestamp).toLocaleString()}</span>
+                    </div>
+                    <div class="location-details">
+                        <p><strong>Coordinates:</strong> ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}</p>
+                        <p><strong>Accuracy:</strong> ±${location.accuracy}m</p>
+                        <p><strong>Device:</strong> ${location.deviceInfo.platform}</p>
+                        <div class="location-actions">
+                            <a href="https://www.google.com/maps?q=${location.latitude},${location.longitude}" 
+                               target="_blank" class="btn-small">View on Maps</a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function refreshData() {
+            loadDashboard();
+        }
+
+        // Load data on page load
+        loadDashboard();
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadDashboard, 30000);
+    </script>
+</body>
+</html>
